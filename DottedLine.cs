@@ -6,21 +6,30 @@ using Sirenix.OdinInspector;
 [RequireComponent(typeof(SortingGroup))]
 public class DottedLine : MonoBehaviour {
 
+    [Header("Points")]
     // start of line
     [OnValueChanged("renderLine")]
     public Vector2 point1;
 
     // end of line    
     [OnValueChanged("renderLine")]
-    public Vector2 point2;    
-	
+    public Vector2 point2;
+
+    [Header("Bound Objects (optional)")]
+    public GameObject Object1;
+    public GameObject Object2;
+
+    [Header("Sprite")]
 	// dot used for line
 	public Sprite dotSprite;
     
+    [Header("Render Values")]
     [OnValueChanged("renderLine")]
+    [Range(0f, 1f)]
     public float size;            
     
     [OnValueChanged("renderLine")]
+    [Range(0f, 1f)]
     public float spacing;    
     
     [OnValueChanged("renderLine")]
@@ -34,6 +43,16 @@ public class DottedLine : MonoBehaviour {
 
     void Start() {        
         renderLine();
+    }
+
+    void Update() {
+
+        if (Object1 != null)
+            updateFromObject(Object1, ref point1);
+
+        if (Object2 != null)
+            updateFromObject(Object2, ref point2);
+
     }
 
 	// add dot to game view
@@ -125,4 +144,18 @@ public class DottedLine : MonoBehaviour {
 	
 	}
 	
+    private void updateFromObject(GameObject obj, ref Vector2 point) {
+
+        Vector2 objPosition = (Vector2)obj.transform.position;
+
+        if (objPosition.Equals(point))
+            return;
+
+        point.x = objPosition.x;
+        point.y = objPosition.y;
+
+        renderLine();
+
+    }
+
 }
