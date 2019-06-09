@@ -1,25 +1,39 @@
-﻿#if (UNITY_EDITOR) 
+﻿#if (UNITY_EDITOR)
+using File = UnityEngine.Windows.File;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Windows;
 using UnityEngine.SceneManagement;
-using System;
 using System.Diagnostics;
+using System.IO;
+
+// Requirements: Butler, 7Zip
 
 public static class ScriptBatch {
+    
+    // application paths
+    private static string _zipPath = "C:\\Program Files\\7-Zip\\7z.exe";
+    private static string _butlerPath = "C:\\Program Files\\butler-windows-amd64\\butler.exe";
+    
+    // itch paths
+    private static string _itchLogin = "searle";
+    private static string _projectName = "platformer2";
+
     [MenuItem("BuildTools/Butler WebGL")]
     public static void BuildGame() {
 
-        UnityEngine.Debug.Log("Building WebGL");
+        DirectoryInfo di = new DirectoryInfo(Application.dataPath);
+        string cwd = di.Parent.FullName;
+
+        UnityEngine.Debug.Log("Building WebGL: " + cwd);
 
         File.Delete("./Builds/webgl.zip");
         BuildPipeline.BuildPlayer(getScenes(), "./Builds/webgl", BuildTarget.WebGL, BuildOptions.None);
 
         UnityEngine.Debug.Log("Compressing build");
-        executeProcess("C:\\Program Files\\7-Zip\\7z.exe", "a -tzip -r ./Builds/webgl ./Builds/webgl");
+        executeProcess(_zipPath, "a -tzip -r ./Builds/webgl ./Builds/webgl");
 
-        UnityEngine.Debug.Log("Pushing to Itch");
-        executeProcess("C:\\Program Files\\butler-windows-amd64\\butler.exe", "push C:\\Users\\Searle\\Source\\Repos\\Platformer2\\Builds\\webgl.zip searle/platformer1:webgl");
+        UnityEngine.Debug.Log("Pushing to Itch: " + $"{_butlerPath} push {cwd}\\Builds\\webgl.zip {_itchLogin}/{_projectName}:webgl");
+        executeProcess(_butlerPath, $"push {cwd}\\Builds\\webgl.zip {_itchLogin}/{_projectName}:webgl");
 
         UnityEngine.Debug.Log("WebGL deploy complete");
     }
