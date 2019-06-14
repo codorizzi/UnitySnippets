@@ -8,6 +8,9 @@ using UnityEngine;
  *
  * - Fixed defect -    Downward raycasts made too close (or in) to a platform mask with fail to detect a collide, and
  *                     would prevent additional raycasts from triggering.
+ *
+ * - Added -           Added SetTransform method that checks for platform collisions and moves Character to the
+ *                     closest point possible.
  * 
  */
 
@@ -236,15 +239,12 @@ namespace MoreMountains.CorgiEngine {
             }
         }
 
+        // sets the Character transform to closets safe point to target position
         public void SetTransform(Vector2 position) {
-
             transform.position = GetClosestSafePosition(position);
-            
-//            if(IsSafePosition(position))
-//                transform.position = position;
-
         }
 
+        // Returns the closest safe point between target position and platform colliders
         public Vector2 GetClosestSafePosition(Vector2 position) {
 
             float closestDistance = 0.05f;
@@ -274,25 +274,6 @@ namespace MoreMountains.CorgiEngine {
                 return origin;
 
             return Vector2.MoveTowards(origin, position, distanceToClosest);
-
-        }
-
-        public bool IsSafePosition(Vector2 position) {
-
-            Vector2 origin = transform.position;
-
-            Vector2 heading = position - origin;
-            float distance = heading.magnitude;
-            Vector2 direction = heading / distance;
-            float angle = 0f;
-
-            // cast box of same size as Character box collider towards the new transform, looking for Platform collisions
-            RaycastHit2D hits = Physics2D.BoxCast(origin, _boxCollider.size, angle, direction, distance,
-                PlatformMask);
-            
-            MMDebug.DrawSolidRectangle(position, _boxCollider.size, Color.magenta , Color.red);
-
-            return hits.collider == null;
 
         }
         
