@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using MoreMountains.CorgiEngine;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -10,6 +11,8 @@ public class GrapplingHook : MonoBehaviour {
     public GameObject source;
     
     private List<GameObject> _pieces;
+
+    public bool hasGrip;
 
     private void Awake() {
         _pieces = new List<GameObject>();
@@ -34,6 +37,9 @@ public class GrapplingHook : MonoBehaviour {
             step = Vector2.MoveTowards(step, target, distanceBetweenPieces);
             AddPiece(step, _pieces.Last());
         }
+
+        if (hasGrip)
+            _pieces.Last().AddComponent<Grip>();
 
     }
 

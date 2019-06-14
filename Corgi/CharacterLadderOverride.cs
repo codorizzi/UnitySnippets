@@ -13,112 +13,110 @@ using UnityEngine;
  * 
  */
 
-public class CharacterLadderOverride : CharacterLadder {
-    
-    private BoxCollider2D _boxCollider;
-    public LayerMask _ladderMask;
-    private ContactFilter2D _ladderFilter;
-    
-    public new  bool LadderColliding => _boxCollider.IsTouchingLayers(_ladderMask);
+namespace MoreMountains.CorgiEngine {
 
-    /// the ladder the character is currently on
-    public new Ladder CurrentLadder {
-        get {
-            
-            if (!_boxCollider.IsTouchingLayers(_ladderMask)) 
-                return null;
-            
-            ContactFilter2D filter = new ContactFilter2D();
-            filter.SetLayerMask(_ladderMask);
-				
-            List<Collider2D> colliders = new List<Collider2D>();
-            _boxCollider.OverlapCollider(filter, colliders);
+    public class CharacterLadderOverride : CharacterLadder {
 
-            return colliders[0].GetComponent<Ladder>();
-        }
-    }
-    
-    const float _climbingDownInitialYTranslation = 0.1f;
-    const float _ladderTopSkinHeight = 0.01f;
+        private BoxCollider2D _boxCollider;
+        public LayerMask _ladderMask;
+        private ContactFilter2D _ladderFilter;
 
-    protected CorgiControllerOverride _corgiController;
+        public new bool LadderColliding => _boxCollider.IsTouchingLayers(_ladderMask);
 
-    private void Awake() {
-        _corgiController = GetComponent<CorgiControllerOverride>();
-    }
+        /// the ladder the character is currently on
+        public new Ladder CurrentLadder {
+            get {
 
-    protected override void Initialization() {
-        base.Initialization();
-        
-        _boxCollider = GetComponent<BoxCollider2D>();
-        _ladderFilter = new ContactFilter2D();
-        _ladderFilter.SetLayerMask(_ladderMask);
-        
-    }
-    
-    protected override void StartClimbingDown()
-    {
-        SetClimbingState();
-        _controller.CollisionsOff();
-        _controller.ResetColliderSize ();
+                if (!_boxCollider.IsTouchingLayers(_ladderMask))
+                    return null;
 
-        // we rotate our character if requested
-        if (ForceRightFacing)
-        {
-            _character.Face(Character.FacingDirections.Right);
-        }
+                ContactFilter2D filter = new ContactFilter2D();
+                filter.SetLayerMask(_ladderMask);
 
-        if (_characterGravity != null)
-        {
-            if (_characterGravity.ShouldReverseInput ())
-            {
-                if (CurrentLadder.CenterCharacterOnLadder)
-                {
-                    _corgiController.SetTransform(new Vector2(CurrentLadder.transform.position.x, transform.position.y + _climbingDownInitialYTranslation));
-                }
-                else {
-                    _corgiController.SetTransform(new Vector2(transform.position.x, transform.position.y + _climbingDownInitialYTranslation));
-                }
-                return;
+                List<Collider2D> colliders = new List<Collider2D>();
+                _boxCollider.OverlapCollider(filter, colliders);
+
+                return colliders[0].GetComponent<Ladder>();
             }
         }
 
-        // we force its position to be a bit lower 
-        if (CurrentLadder.CenterCharacterOnLadder)
-        {
-            _corgiController.SetTransform(new Vector2(CurrentLadder.transform.position.x, transform.position.y - _climbingDownInitialYTranslation));
-        }
-        else
-        {
-            _corgiController.SetTransform(new Vector2(transform.position.x, transform.position.y - _climbingDownInitialYTranslation));
-        }
-    }
-    
-    protected override void StartClimbing() {
+        const float _climbingDownInitialYTranslation = 0.1f;
+        const float _ladderTopSkinHeight = 0.01f;
 
-        if (CurrentLadder.LadderPlatform != null)
-        {
-            if (AboveLadderPlatform()) 
-            {
-                return;
+        protected CorgiControllerOverride _corgiController;
+
+        private void Awake() {
+            _corgiController = GetComponent<CorgiControllerOverride>();
+        }
+
+        protected override void Initialization() {
+            base.Initialization();
+
+            _boxCollider = GetComponent<BoxCollider2D>();
+            _ladderFilter = new ContactFilter2D();
+            _ladderFilter.SetLayerMask(_ladderMask);
+
+        }
+
+        protected override void StartClimbingDown() {
+            SetClimbingState();
+            _controller.CollisionsOff();
+            _controller.ResetColliderSize();
+
+            // we rotate our character if requested
+            if (ForceRightFacing) {
+                _character.Face(Character.FacingDirections.Right);
+            }
+
+            if (_characterGravity != null) {
+                if (_characterGravity.ShouldReverseInput()) {
+                    if (CurrentLadder.CenterCharacterOnLadder) {
+                        _corgiController.SetTransform(new Vector2(CurrentLadder.transform.position.x,
+                            transform.position.y + _climbingDownInitialYTranslation));
+                    }
+                    else {
+                        _corgiController.SetTransform(new Vector2(transform.position.x,
+                            transform.position.y + _climbingDownInitialYTranslation));
+                    }
+
+                    return;
+                }
+            }
+
+            // we force its position to be a bit lower 
+            if (CurrentLadder.CenterCharacterOnLadder) {
+                _corgiController.SetTransform(new Vector2(CurrentLadder.transform.position.x,
+                    transform.position.y - _climbingDownInitialYTranslation));
+            }
+            else {
+                _corgiController.SetTransform(new Vector2(transform.position.x,
+                    transform.position.y - _climbingDownInitialYTranslation));
             }
         }
 
-        // we rotate our character if requested
-        if (ForceRightFacing)
-        {
-            _character.Face(Character.FacingDirections.Right);
+        protected override void StartClimbing() {
+
+            if (CurrentLadder.LadderPlatform != null) {
+                if (AboveLadderPlatform()) {
+                    return;
+                }
+            }
+
+            // we rotate our character if requested
+            if (ForceRightFacing) {
+                _character.Face(Character.FacingDirections.Right);
+            }
+
+            SetClimbingState();
+
+            // we set collisions
+            _controller.CollisionsOn();
+
+            if (CurrentLadder.CenterCharacterOnLadder) {
+                _corgiController.SetTransform(new Vector2(CurrentLadder.transform.position.x,
+                    _controller.transform.position.y));
+            }
         }
 
-        SetClimbingState();
-
-        // we set collisions
-        _controller.CollisionsOn();
-
-        if (CurrentLadder.CenterCharacterOnLadder)
-        {
-            _corgiController.SetTransform(new Vector2(CurrentLadder.transform.position.x,_controller.transform.position.y));
-        }
     }
-    
 }

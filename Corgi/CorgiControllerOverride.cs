@@ -238,8 +238,42 @@ namespace MoreMountains.CorgiEngine {
 
         public void SetTransform(Vector2 position) {
 
-            if(IsSafePosition(position))
-                transform.position = position;
+            transform.position = GetClosestSafePosition(position);
+            
+//            if(IsSafePosition(position))
+//                transform.position = position;
+
+        }
+
+        public Vector2 GetClosestSafePosition(Vector2 position) {
+
+            float closestDistance = 0.05f;
+            
+            Vector2 origin = transform.position;
+    
+            // position, angle, distance to box cast
+            Vector2 heading = position - origin;
+            float distance = heading.magnitude;
+            Vector2 direction = heading / distance;
+            float angle = 0f;
+            
+            // cast box of same size as Character box collider towards the new transform, looking for Platform collisions
+            RaycastHit2D hit = Physics2D.BoxCast(origin, _boxCollider.size, angle, direction, distance,
+                PlatformMask);
+
+            // if no hit on box cast, then safe. return position;
+            if (hit.collider == null)
+                return position;
+
+            // get closest point / distance to collider that hit
+            Vector2 d = Physics2D.ClosestPoint(position, hit.collider);
+            float distanceToClosest = Vector2.Distance(d, position);
+
+            // don't move if distance is closest collider is already close enough
+            if (distanceToClosest <= closestDistance)
+                return origin;
+
+            return Vector2.MoveTowards(origin, position, distanceToClosest);
 
         }
 
@@ -255,6 +289,8 @@ namespace MoreMountains.CorgiEngine {
             // cast box of same size as Character box collider towards the new transform, looking for Platform collisions
             RaycastHit2D hits = Physics2D.BoxCast(origin, _boxCollider.size, angle, direction, distance,
                 PlatformMask);
+            
+            MMDebug.DrawSolidRectangle(position, _boxCollider.size, Color.magenta , Color.red);
 
             return hits.collider == null;
 
