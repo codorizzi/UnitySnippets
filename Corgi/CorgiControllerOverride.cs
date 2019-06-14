@@ -256,17 +256,15 @@ namespace MoreMountains.CorgiEngine {
             float distance = heading.magnitude;
             Vector2 direction = heading / distance;
             float angle = 0f;
-            
-            // cast box of same size as Character box collider towards the new transform, looking for Platform collisions
-            RaycastHit2D hit = Physics2D.BoxCast(origin, _boxCollider.size, angle, direction, distance,
-                PlatformMask);
 
+            Collider2D hit = Physics2D.OverlapBox(origin, _boxCollider.size, angle, PlatformMask);
+            
             // if no hit on box cast, then safe. return position;
-            if (hit.collider == null)
+            if (hit == null)
                 return position;
 
             // get closest point / distance to collider that hit
-            Vector2 d = Physics2D.ClosestPoint(position, hit.collider);
+            Vector2 d = Physics2D.ClosestPoint(position, hit);
             float distanceToClosest = Vector2.Distance(d, position);
 
             // don't move if distance is closest collider is already close enough
