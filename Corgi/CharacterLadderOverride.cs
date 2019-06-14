@@ -19,10 +19,8 @@ public class CharacterLadderOverride : CharacterLadder {
     public LayerMask _ladderMask;
     private ContactFilter2D _ladderFilter;
     
-    public new  bool LadderColliding {
-        get { return _boxCollider.IsTouchingLayers(_ladderMask); }
-    }
-    
+    public new  bool LadderColliding => _boxCollider.IsTouchingLayers(_ladderMask);
+
     /// the ladder the character is currently on
     public new Ladder CurrentLadder {
         get {

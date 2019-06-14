@@ -13,9 +13,6 @@ using UnityEngine;
 
 namespace MoreMountains.CorgiEngine {
     public class CorgiControllerOverride : CorgiController {
-        
-        protected bool InvalidPosition = false;
-        private Vector3 SafePosition;
 
         protected override void EveryFrame() {
             
@@ -47,20 +44,8 @@ namespace MoreMountains.CorgiEngine {
 
             CastRaysBelow();
             CastRaysAbove();
-
-            // safety check to see if the new transform position is actually safe, no collision == safe
-            RaycastHit2D rc = MMDebug.RayCast(_newPosition, Vector2.down, 0.0001f, PlatformMask, Color.black, false);
             
-            // we move our transform to its next position
-            if (!InvalidPosition && rc.collider == null) {
-                _transform.Translate(_newPosition, Space.Self);
-                SafePosition = _transform.position;
-            }
-            // currently sitting in an invalid position, move to last safe
-            else {
-                _transform.position = SafePosition;
-                InvalidPosition = false;
-            }
+            _transform.Translate(_newPosition, Space.Self);
 
             SetRaysParameters();
             ComputeNewSpeed();
@@ -253,17 +238,25 @@ namespace MoreMountains.CorgiEngine {
 
         public void SetTransform(Vector2 position) {
 
-            Vector2 heading = position - (Vector2)transform.position;
+            if(IsSafePosition(position))
+                transform.position = position;
+
+        }
+
+        public bool IsSafePosition(Vector2 position) {
+
+            Vector2 origin = transform.position;
+
+            Vector2 heading = position - origin;
             float distance = heading.magnitude;
             Vector2 direction = heading / distance;
             float angle = 0f;
 
             // cast box of same size as Character box collider towards the new transform, looking for Platform collisions
-            RaycastHit2D hits = Physics2D.BoxCast(transform.position, _boxCollider.size, angle, direction, distance,
+            RaycastHit2D hits = Physics2D.BoxCast(origin, _boxCollider.size, angle, direction, distance,
                 PlatformMask);
 
-            if (hits.collider == null)
-                transform.position = position;
+            return hits.collider == null;
 
         }
         
