@@ -21,7 +21,11 @@ namespace MoreMountains.CorgiEngine {
         public LayerMask _ladderMask;
         private ContactFilter2D _ladderFilter;
 
-        public new bool LadderColliding => _boxCollider.IsTouchingLayers(_ladderMask);
+        public new bool LadderColliding {
+            get {
+                return _boxCollider.IsTouchingLayers(_ladderMask);
+            }
+        }
 
         /// the ladder the character is currently on
         public new Ladder CurrentLadder {
@@ -36,7 +40,12 @@ namespace MoreMountains.CorgiEngine {
                 List<Collider2D> colliders = new List<Collider2D>();
                 _boxCollider.OverlapCollider(filter, colliders);
 
-                return colliders[0].GetComponent<Ladder>();
+                // should always have an item, but just in case
+                if(colliders.Count > 0)
+                    return colliders[0].GetComponent<Ladder>();
+                
+                return null;
+
             }
         }
 
@@ -117,6 +126,129 @@ namespace MoreMountains.CorgiEngine {
                     _controller.transform.position.y));
             }
         }
+        
+        // Override because LadderColliding and CurrentLadder are not virtual
+        protected override void HandleLadderClimbing() {
+            
+            if (!AbilityPermitted
+                || (_condition.CurrentState != CharacterStates.CharacterConditions.Normal &&
+                    _condition.CurrentState != CharacterStates.CharacterConditions.ControlledMovement)) {
+                return;
+            }
 
+            // if the character is colliding with a ladder
+            if (LadderColliding) {
+                if ((_movement.CurrentState ==
+                     CharacterStates.MovementStates.LadderClimbing) // if the character is climbing
+                    && _controller.State.IsGrounded) // and is grounded
+                {
+	                // we make it get off the ladder
+	                GetOffTheLadder();
+                }
+
+                if (_inputManager == null) {
+	                return;
+                }
+
+                if (_verticalInput > _inputManager.Threshold.y // if the player is pressing up
+                    && (_movement.CurrentState !=
+                        CharacterStates.MovementStates.LadderClimbing
+                    ) // and we're not climbing a ladder already
+                    && (_movement.CurrentState !=
+                        CharacterStates.MovementStates.Gliding) // and we're not gliding
+                    && (_movement.CurrentState != CharacterStates.MovementStates.Jetpacking)
+                ) // and we're not jetpacking
+                {
+	                // then the character starts climbing
+	                StartClimbing();
+                }
+
+                // if the character is climbing the ladder (which means it previously connected with it)
+                if (_movement.CurrentState == CharacterStates.MovementStates.LadderClimbing) {
+	                Climbing();
+                }
+
+                // if the current ladder does have a ladder platform associated to it
+                if (CurrentLadder.LadderPlatform != null) {
+	                if ((_movement.CurrentState ==
+	                     CharacterStates.MovementStates.LadderClimbing) // if the character is climbing
+	                    && AboveLadderPlatform()) // and is above the ladder platform
+	                {
+		                // we make it get off the ladder
+		                GetOffTheLadder();
+	                }
+                }
+
+                if (CurrentLadder.LadderPlatform != null) {
+	                if ((_movement.CurrentState !=
+	                     CharacterStates.MovementStates.LadderClimbing) // if the character is climbing
+	                    && (_verticalInput < -_inputManager.Threshold.y) // and is pressing down
+	                    && (AboveLadderPlatform()) // and is above the ladder's platform
+	                    && _controller.State.IsGrounded) // and is grounded
+	                {
+		                // we make it get off the ladder
+		                StartClimbingDown();
+	                }
+                }
+            }
+            else {
+                // if we're not colliding with a ladder, but are still in the LadderClimbing state
+                if (_movement.CurrentState == CharacterStates.MovementStates.LadderClimbing) {
+	                GetOffTheLadder();
+                }
+            }
+
+            // we stop our sounds if needed
+            if (_movement.CurrentState != CharacterStates.MovementStates.LadderClimbing &&
+                _abilityInProgressSfx != null) {
+                // we play our exit sound
+                StopAbilityUsedSfx();
+                PlayAbilityStopSfx();
+            }
+        }
+        
+        // Override because LadderColliding and CurrentLadder are not virtual
+        protected override void Climbing()
+        {
+            // we disable the gravity
+            _controller.GravityActive(false);
+
+            if (CurrentLadder.LadderPlatform != null)
+            {
+                if (!AboveLadderPlatform())
+                {
+                    _controller.CollisionsOn();
+                }
+            }
+            else
+            {
+                _controller.CollisionsOn();
+            }				
+			
+            // we set the force according to the ladder climbing speed
+            if (CurrentLadder.LadderType == Ladder.LadderTypes.Simple)
+            {
+                _controller.SetVerticalForce(_verticalInput * LadderClimbingSpeed);
+                // we set the climbing speed state.
+                CurrentLadderClimbingSpeed=Mathf.Abs(_verticalInput ) * transform.up;	
+            }
+            if (CurrentLadder.LadderType == Ladder.LadderTypes.BiDirectional)
+            {
+                _controller.SetHorizontalForce(_horizontalInput * LadderClimbingSpeed);
+                _controller.SetVerticalForce(_verticalInput * LadderClimbingSpeed);
+                CurrentLadderClimbingSpeed = Mathf.Abs(_horizontalInput ) * transform.right;	
+                CurrentLadderClimbingSpeed += Mathf.Abs(_verticalInput ) * (Vector2)transform.up;	
+            }
+
+            if ((CurrentLadderClimbingSpeed != Vector2.zero) && (_abilityInProgressSfx == null))
+            {
+                PlayAbilityUsedSfx ();
+            }
+            if ((CurrentLadderClimbingSpeed == Vector2.zero) && (_abilityInProgressSfx != null))
+            {
+                StopAbilityUsedSfx ();
+            }
+
+        }
     }
 }

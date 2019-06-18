@@ -60,7 +60,6 @@ namespace MoreMountains.CorgiEngine {
             FrameExit();
         }
 
-
         protected override void CastRaysBelow() {
             _friction = 0;
 
@@ -257,6 +256,7 @@ namespace MoreMountains.CorgiEngine {
             Vector2 direction = heading / distance;
             float angle = 0f;
 
+            // check for colliders at new position
             Collider2D hit = Physics2D.OverlapBox(origin, _boxCollider.size, angle, PlatformMask);
             
             // if no hit on box cast, then safe. return position;

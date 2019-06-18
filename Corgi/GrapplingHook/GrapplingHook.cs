@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using MoreMountains.CorgiEngine;
-using Sirenix.OdinInspector;
 using UnityEngine;
 
 public class GrapplingHook : MonoBehaviour {
@@ -18,8 +17,6 @@ public class GrapplingHook : MonoBehaviour {
         _pieces = new List<GameObject>();
     }
 
-    [Button]
-    
     public void DeployHook() {
 
         if(source == null)
