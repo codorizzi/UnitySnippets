@@ -28,3 +28,14 @@ This was mainly a quick test method for attaching the GrappleHook to a Character
 
 ## Sample Project
 https://searle.itch.io/platformer2
+
+# Corgi Lurch Flying Enemy
+
+## CharacterFlyLurch
+Override of CharacterFly that allows a flying in a lurch fashion (e.g. jellyfish type movement)
+
+## AIActionFlyRandom
+Similar to AIActionFlyTowardTarget, except the direction is chosen at random upon decision.
+
+## Sample Project
+https://searle.itch.io/platformer4
