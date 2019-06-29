@@ -39,3 +39,11 @@ Similar to AIActionFlyTowardTarget, except the direction is chosen at random upo
 
 ## Sample Project
 https://searle.itch.io/platformer4
+
+# Wallwalk
+
+## CharacterGravityOverride
+Allows any AI / Player character to wall walk in 360 degrees. Requires CharacterControllerOverride adn CODebug.
+
+## Sample Project
+https://searle.itch.io/platformer4

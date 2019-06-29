@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using MoreMountains.CorgiEngine;
 using MoreMountains.Tools;
+using UnityEditor;
 using UnityEngine;
 
 /*
@@ -16,6 +17,22 @@ using UnityEngine;
 
 namespace MoreMountains.CorgiEngine {
     public class CorgiControllerOverride : CorgiController {
+        
+        public RaycastHit2D _bottomRightAngleRaycast { get; set; }
+        
+        public float BoundsHeight {
+            get { return _boundsHeight; }
+        }
+        
+        public float BoundsWidth {
+            get { return _boundsWidth; }
+        }
+
+        public BoxCollider2D BoxCollider {
+            get { return _boxCollider; }
+        }
+
+        public bool disableWarnings = false;
 
         protected override void EveryFrame() {
             
@@ -47,7 +64,7 @@ namespace MoreMountains.CorgiEngine {
 
             CastRaysBelow();
             CastRaysAbove();
-            
+
             _transform.Translate(_newPosition, Space.Self);
 
             SetRaysParameters();
@@ -254,26 +271,57 @@ namespace MoreMountains.CorgiEngine {
             Vector2 heading = position - origin;
             float distance = heading.magnitude;
             Vector2 direction = heading / distance;
-            float angle = 0f;
+            float angle = transform.rotation.eulerAngles.z;
 
             // check for colliders at new position
-            Collider2D hit = Physics2D.OverlapBox(origin, _boxCollider.size, angle, PlatformMask);
+            Collider2D hit = CODebug.OverlapBox(position, _boxCollider.size, angle, PlatformMask, Color.cyan, true, 1f);
+            //DebugDrawBox(position, _boxCollider.size, angle, Color.cyan, 5f);
             
+            // TODO - fix. doesn't handle rotation.
+
             // if no hit on box cast, then safe. return position;
             if (hit == null)
                 return position;
 
-            // get closest point / distance to collider that hit
-            Vector2 d = Physics2D.ClosestPoint(position, hit);
-            float distanceToClosest = Vector2.Distance(d, position);
+            Vector3 conflictHeading = (Vector2)hit.transform.position - origin;
+            float conflictDistance = conflictHeading.magnitude;
+            Vector2 conflictDirection = conflictHeading / conflictDistance;
 
-            // don't move if distance is closest collider is already close enough
-            if (distanceToClosest <= closestDistance)
+            position += -conflictDirection * 0.05f;
+            
+            hit = CODebug.OverlapBox(position, _boxCollider.size, angle, PlatformMask, Color.red, true, 1f);
+            if (hit == null)
+                return position;
+            else {
+                
+                if(!disableWarnings)
+                    Debug.LogWarning("Ignoring SetTransform request - no valid position detected");
+                
                 return origin;
-
-            return Vector2.MoveTowards(origin, position, distanceToClosest);
+            }
 
         }
         
+        public void DebugDrawBox( Vector2 point, Vector2 size, float angle, Color color, float duration) {
+
+            var orientation = Quaternion.Euler(0, 0, angle);
+
+            // Basis vectors, half the size in each direction from the center.
+            Vector2 right = orientation * Vector2.right * size.x/2f;
+            Vector2 up = orientation * Vector2.up * size.y/2f;
+
+            // Four box corners.
+            var topLeft = point + up - right;
+            var topRight = point + up + right;
+            var bottomRight = point - up + right;
+            var bottomLeft = point - up - right;
+
+            // Now we've reduced the problem to drawing lines.
+            Debug.DrawLine(topLeft, topRight, color, duration);
+            Debug.DrawLine(topRight, bottomRight, color, duration);
+            Debug.DrawLine(bottomRight, bottomLeft, color, duration);
+            Debug.DrawLine(bottomLeft, topLeft, color, duration);
+        }
+
     }
 }
