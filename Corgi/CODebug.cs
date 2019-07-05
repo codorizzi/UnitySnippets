@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using MoreMountains.Tools;
 using UnityEngine;
 
 public class CODebug : MonoBehaviour
@@ -12,6 +13,14 @@ public class CODebug : MonoBehaviour
         
         return Physics2D.OverlapBox(point, size, angle, layerMask);
 
+    }
+    
+    public static RaycastHit2D RayCast(Vector2 rayOriginPoint, Vector2 rayDirection, float rayDistance, LayerMask mask, Color color,bool drawGizmo=false, float duration=1f)
+    {	
+        if (drawGizmo) 
+            Debug.DrawRay (rayOriginPoint, rayDirection * rayDistance, color, duration);
+        
+        return Physics2D.Raycast(rayOriginPoint,rayDirection,rayDistance,mask);		
     }
     
     public static void DebugDrawBox( Vector2 point, Vector2 size, float angle, Color color, float duration) {
